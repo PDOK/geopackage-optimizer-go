@@ -25,7 +25,7 @@ RUN make
 FROM golang:1.17-alpine AS build-env
 
 RUN apk update && apk upgrade && \
-   apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite
+   apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite jq
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
@@ -51,6 +51,7 @@ RUN cp /usr/lib/mod_spatialite.so.7 /usr/lib/mod_spatialite.so
 
 # run tests
 RUN go test ./... -covermode=atomic
+RUN rm -r geopackage/
 
 RUN go build -v -ldflags='-s -w -linkmode auto' -a -installsuffix cgo -o /optimizer .
 

@@ -5,5 +5,12 @@
 [![Go Report Card](https://goreportcard.com/badge/PDOK/geopackage-optimizer-go)](https://goreportcard.com/report/PDOK/geopackage-optimizer-go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/pdok/geopackage-optimizer-go.svg)](https://hub.docker.com/r/pdok/geopackage-optimizer-go)
 
+Optimizes geopackage so that it confirms to the technical recommendations of PDOK.
+
+# Optimizations
+
+* create index PUUID using UUID4
+* create index FUUID using [tablename].[PUUID]
+
 # Usage
 docker run -v /[your-gpkg-directory]:/geopackages -t geopackage-optimizer-go:[tag] /optimizer -s /geopackages/[your-geopackage-name].gpkg
