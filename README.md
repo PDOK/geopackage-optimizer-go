@@ -7,26 +7,30 @@
 
 Optimizes geopackage so that it can be used as datasource for PDOK ogc services.
 
-# Optimizations
+## Optimizations
 
 * create index PUUID using UUID4
 * create index FUUID using [tablename].[PUUID]
 
-This ensures that there are randomly generated UUID's usable as index, which has a couple of advantages:
+This ensures that there are randomly generated UUID's usable as index, which has
+ a couple of advantages:
 
 * having an index is good for performance
 * having a UUID instead of an incremental ID prevents crawling
-* having a UUID prevents users from creating applications that assumes that id has meaning
-and will not change in the future
+* having a UUID prevents users from creating applications that assumes that id
+  has meaning and will not change in the future
 
-# Usage
-```
-docker run -v /[your-gpkg-directory]:/geopackages -t geopackage-optimizer-go:[tag] /optimizer -s /geopackages/[your-geopackage-name].gpkg
+## Usage
+
+```docker
+docker run -v /[your-gpkg-directory]:/geopackages \
+ -t geopackage-optimizer-go:[tag] /optimizer \
+ -s /geopackages/[your-geopackage-name].gpkg
 ```
 
-# Workflow examples
+## Workflow examples
 
-```
+```yaml
 spec:
   templates:
     - name: optimize-gpkg
