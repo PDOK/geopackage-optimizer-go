@@ -1,5 +1,7 @@
 FROM ubuntu:20.04 as build-ext
 ENV TZ Europe/Amsterdam
+ENV MC_VERSION="RELEASE.2021-10-07T04-19-58Z"
+
 RUN apt-get update && \
     apt-get install -y \
         curl \
@@ -13,7 +15,7 @@ RUN apt-get update && \
         uuid-dev
 
 # download minio client
-RUN curl https://dl.minio.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-02-10T07-32-57Z > /usr/local/bin/mc && \
+RUN curl https://dl.minio.io/client/mc/release/linux-amd64/archive/mc.${MC_VERSION} > /usr/local/bin/mc && \
     chmod +x /usr/local/bin/mc
 
 # build uuid extension
