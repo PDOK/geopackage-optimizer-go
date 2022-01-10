@@ -1,6 +1,6 @@
 FROM ubuntu:20.04 as build-ext
 ENV TZ Europe/Amsterdam
-ENV MC_VERSION="RELEASE.2021-10-07T04-19-58Z"
+ENV MC_VERSION="RELEASE.2022-01-07T06-01-38Z"
 
 RUN apt-get update && \
     apt-get install -y \
