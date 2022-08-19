@@ -1,6 +1,6 @@
 FROM ubuntu:20.04 as build-ext
 ENV TZ Europe/Amsterdam
-ENV MC_VERSION="RELEASE.2022-01-07T06-01-38Z"
+ENV MC_VERSION="RELEASE.2022-08-11T00-30-48Z"
 
 RUN apt-get update && \
     apt-get install -y \
@@ -27,7 +27,7 @@ RUN make
 FROM golang:1.17-alpine AS build-env
 
 RUN apk update && apk upgrade && \
-   apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite jq
+   apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite jq libuuid
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
