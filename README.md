@@ -20,12 +20,16 @@ This ensures that there are randomly generated UUID's usable as index, which has
 * having a UUID prevents users from creating applications that assumes that id
   has meaning and will not change in the future
 
-## Usage
+## TLDR Usage
 
-```docker
-docker run -v /[your-gpkg-directory]:/geopackages \
- -t geopackage-optimizer-go:[tag] /optimizer \
- -s /geopackages/[your-geopackage-name].gpkg
+Run from the root of this repo (note modifies `geopackage/original.gpkg`):
+
+```bash
+gpkg_path=geopackage/original.gpkg
+docker run \
+  -v "$(realpath $gpkg_path | xargs dirname)":/geopackages \
+  -t pdok/geopackage-optimizer-go:latest /optimizer \
+  -s "/geopackages/$(basename $gpkg_path)"
 ```
 
 ## Workflow examples
