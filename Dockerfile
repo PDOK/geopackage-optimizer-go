@@ -1,6 +1,5 @@
 FROM ubuntu:20.04 as build-ext
 ENV TZ Europe/Amsterdam
-ENV MC_VERSION="RELEASE.2022-08-11T00-30-48Z"
 
 RUN apt-get update && \
     apt-get install -y \
@@ -13,10 +12,6 @@ RUN apt-get update && \
         libsqlite3-dev \
         libssl-dev \
         uuid-dev
-
-# download minio client
-RUN curl https://dl.minio.io/client/mc/release/linux-amd64/archive/mc.${MC_VERSION} > /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc
 
 # build uuid extension
 RUN apt-get install -y git
@@ -48,7 +43,6 @@ ENV CGO_ENABLED=1
 ENV GOOS=linux
 
 COPY --from=build-ext /sqlite3-uuid/dist/uuid.so.* /usr/lib/uuid.so
-COPY --from=build-ext /usr/local/bin/mc /usr/local/bin/mc
 RUN cp /usr/lib/mod_spatialite.so.7 /usr/lib/mod_spatialite.so
 
 # run tests

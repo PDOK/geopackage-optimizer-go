@@ -55,31 +55,44 @@ spec:
         parameters:
           - name: source-key
           - name: destination-key
+        artifacts:
+          - name: "gpkg"
+            path: "/data/input.gpkg"
+            archive:
+              none: {}
+      outputs:
+        artifacts:
+          - name: gpkg
+            path: "/data/input.gpkg"
+            archive:
+              none: {}
+            azure:
+              endpoint: "$(BLOBS_ENDPOINT)"
+              container: geopackages
+              blob: "{{inputs.parameters.destination-key}}"
+              accountKeySecret:
+                name: blobs-argo
+                key: BLOBS_KEY
       container:
         image: geopackage-optimizer-go
         imagePullPolicy: IfNotPresent
-        envFrom:
-          - configMapRef:
-              name: minio
-          - secretRef:
-              name: minio
         volumeMounts:
           - name: gpkg-volume
-            mountPath: /srv/data
+            mountPath: /data
         command: ["/bin/bash", "-c"]
         args:
           - |
-            mc alias set minio ${S3_ENDPOINT} ${S3_ACCESS_KEY} ${S3_SECRET_KEY}
-            mc cp minio/$(S3_DELIVERY_BUCKET)/{{inputs.parameters.source-key}} /srv/data/transform.gpkg
-            /optimizer -s /srv/data/transform.gpkg
-            mc cp /srv/data/transform.gpkg minio/$(S3_GEOPACKAGES_BUCKET)/{{inputs.parameters.destination-key}}
+            set -o errexit
+            set -o nounset
+            set -o pipefail
+            /optimizer -s /data/input.gpkg
         resources:
           limits:
             cpu: "0.1"
             memory: "650Mi"
-            ephemeral-storage: #PATCH
+            ephemeral-storage: # PATCH
           requests:
             cpu: "0.1"
             memory: "650Mi"
-            ephemeral-storage: #PATCH
+            ephemeral-storage: # PATCH
 ```
