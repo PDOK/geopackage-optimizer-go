@@ -14,10 +14,6 @@ RUN apt-get update && \
         libssl-dev \
         uuid-dev
 
-# download minio client
-RUN curl https://dl.minio.io/client/mc/release/linux-amd64/archive/mc.${MC_VERSION} > /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc
-
 # build uuid extension
 RUN apt-get install -y git
 RUN git clone https://github.com/benwebber/sqlite3-uuid.git
