@@ -25,11 +25,9 @@ This ensures that there are randomly generated UUID's usable as index, which has
 Run from the root of this repo (note modifies `geopackage/original.gpkg`):
 
 ```bash
-gpkg_path=geopackage/original.gpkg
 docker run \
-  -v "$(realpath $gpkg_path | xargs dirname)":/geopackages \
-  -t pdok/geopackage-optimizer-go:latest /optimizer \
-  -s "/geopackages/$(basename $gpkg_path)"
+  -v geopackage:/geopackage \
+  pdok/geopackage-optimizer-go:latest "/geopackage/original.gpkg"
 ```
 
 ## Workflow examples
@@ -79,13 +77,8 @@ spec:
         volumeMounts:
           - name: gpkg-volume
             mountPath: /data
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            set -o errexit
-            set -o nounset
-            set -o pipefail
-            /optimizer -s /data/input.gpkg
+        command: ["/optimizer", "-s"]
+        args: ["/data/input.gpkg"]
         resources:
           limits:
             cpu: "0.1"

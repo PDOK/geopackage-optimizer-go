@@ -51,4 +51,4 @@ RUN rm -r geopackage/
 
 RUN go build -v -ldflags='-s -w -linkmode auto' -a -installsuffix cgo -o /optimizer .
 
-CMD ["/optimizer"]
+ENTRYPOINT ["/optimizer", "-s"]
