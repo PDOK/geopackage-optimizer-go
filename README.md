@@ -77,7 +77,7 @@ spec:
         volumeMounts:
           - name: gpkg-volume
             mountPath: /data
-        command: ["/optimizer", "-s"]
+        command: ["/optimizer", "-s"] # Needed with argo 3.4.4 Emissary workflow executor
         args: ["/data/input.gpkg"]
         resources:
           limits:
