@@ -68,33 +68,32 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 
 			if layerCfg.TemporalColumns != nil {
 				createIndex(tableName, layerCfg.TemporalColumns, fmt.Sprintf("%s_temporal_idx", tableName), false, db)
-				addOAFDefaultOptimizations(tableName, layerCfg.GeomColumn, layerCfg.TemporalColumns, db)
-			} else {
-				addOAFDefaultOptimizations(tableName, layerCfg.GeomColumn, nil, db)
 			}
+
+			addOAFDefaultOptimizations(tableName, layerCfg.FidColumn, layerCfg.GeomColumn, layerCfg.TemporalColumns, db)
 
 			analyze(db)
 		}
 	} else {
 		for _, tableName := range tableNames {
-			addOAFDefaultOptimizations(tableName, "geom", nil, db)
+			addOAFDefaultOptimizations(tableName, "fid", "geom", nil, db)
 
 			analyze(db)
 		}
 	}
 }
 
-func addOAFDefaultOptimizations(tableName string, geomColumn string, temporalColumns []string, db *sql.DB) {
+func addOAFDefaultOptimizations(tableName string, fidColumn string, geomColumn string, temporalColumns []string, db *sql.DB) {
 	addColumn(tableName, "minx", "numeric", db)
 	addColumn(tableName, "maxx", "numeric", db)
 	addColumn(tableName, "miny", "numeric", db)
 	addColumn(tableName, "maxy", "numeric", db)
-	setColumnValue(tableName, "minx", fmt.Sprintf("ST_MinX('%s')", geomColumn), db)
-	setColumnValue(tableName, "maxx", fmt.Sprintf("ST_MaxX('%s')", geomColumn), db)
-	setColumnValue(tableName, "miny", fmt.Sprintf("ST_MinY('%s')", geomColumn), db)
-	setColumnValue(tableName, "maxy", fmt.Sprintf("ST_MaxY('%s')", geomColumn), db)
+	setColumnValue(tableName, "minx", fmt.Sprintf("ST_MinX(%s)", geomColumn), db)
+	setColumnValue(tableName, "maxx", fmt.Sprintf("ST_MaxX(%s)", geomColumn), db)
+	setColumnValue(tableName, "miny", fmt.Sprintf("ST_MinY(%s)", geomColumn), db)
+	setColumnValue(tableName, "maxy", fmt.Sprintf("ST_MaxY(%s)", geomColumn), db)
 
-	spatialColumns := []string{"fid", "minx", "maxx", "miny", "maxy"}
+	spatialColumns := []string{fidColumn, "minx", "maxx", "miny", "maxy"}
 	if temporalColumns != nil {
 		spatialColumns = append(spatialColumns, temporalColumns...)
 	}
