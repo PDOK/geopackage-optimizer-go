@@ -248,7 +248,7 @@ func TestOptimizeOAFGeopackageFullConfig(t *testing.T) {
 	}
 
 	config := `{
-      "layers":
+	  "layers":
 	  {
 	    "pand":
 	    {
