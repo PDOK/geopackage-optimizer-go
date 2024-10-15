@@ -9,13 +9,25 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
+func registerDriver(driverName string, extensions []string) {
+	for _, driver := range sql.Drivers() {
+		if driver == driverName {
+			return
+		}
+	}
+	sql.Register(driverName, &sqlite3.SQLiteDriver{
+		Extensions: extensions,
+	})
+}
+
 func openDb(sourceGeopackage string) *sql.DB {
-	sql.Register("sqlite3_with_extensions", &sqlite3.SQLiteDriver{
-		Extensions: []string{
+	registerDriver(
+		"sqlite3_with_extensions",
+		[]string{
 			"mod_spatialite",
 			"uuid",
 		},
-	})
+	)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
