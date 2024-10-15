@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestName(t *testing.T) {
@@ -20,7 +21,7 @@ func TestName(t *testing.T) {
 
 	destination, _ := os.Create(sourceGeopackage)
 	io.Copy(destination, source)
-	optimizeGeopackage(sourceGeopackage)
+	optimizeOWSGeopackage(sourceGeopackage)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	defer db.Close()
