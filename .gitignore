@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+optimizer
+geopackage-optimizer-go
 
 # Test binary, built with `go test -c`
 *.test
