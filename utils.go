@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/mattn/go-sqlite3"
 	"log"
+	"strings"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 func openDb(sourceGeopackage string) *sql.DB {
@@ -16,16 +18,15 @@ func openDb(sourceGeopackage string) *sql.DB {
 	})
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
-
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
+
 	return db
 }
 
 func getTableNames(db *sql.DB) []string {
 	rows, err := db.Query("select table_name from gpkg_contents")
-
 	if err != nil {
 		log.Fatalf("error selecting gpkg_contents: %s", err)
 	}
@@ -40,45 +41,64 @@ func getTableNames(db *sql.DB) []string {
 		}
 		tableNames = append(tableNames, table_name)
 	}
+
 	return tableNames
 }
 
-func createIndex(tableName string, columnName string, db *sql.DB) {
-	indexName := fmt.Sprintf("%s_%s_index", tableName, columnName)
+func createIndex(tableName string, columnNames []string, indexName string, unique bool, db *sql.DB) {
+	if indexName == "" {
+		indexName = fmt.Sprintf("%s_%s_index", tableName, strings.Join(columnNames, "_"))
+	}
 
-	query := `CREATE UNIQUE INDEX %v ON %v(%v);`
-	fullQuery := fmt.Sprintf(query, indexName, tableName, columnName)
-	log.Printf("executing query: %s\n", fullQuery)
-	_, err := db.Exec(fullQuery)
+	var queryStr string
+	if unique {
+		queryStr = "CREATE UNIQUE INDEX %s ON %s(%s);"
+	} else {
+		queryStr = "CREATE INDEX %s ON %s(%s);"
+	}
 
+	query := fmt.Sprintf(queryStr, indexName, tableName, strings.Join(columnNames, ","))
+	log.Printf("executing query: %s\n", query)
+
+	_, err := db.Exec(query)
 	if err != nil {
 		log.Fatalf("error creating index: %s", err)
 	}
 }
 
 func setColumnValue(tableName string, columnName string, value string, db *sql.DB) {
-	query := `UPDATE '%v' SET '%v' = %v;`
-	fullQuery := fmt.Sprintf(query, tableName, columnName, value)
+	query := fmt.Sprintf("UPDATE '%s' SET '%s' = %s;", tableName, columnName, value)
+	log.Printf("executing query: %s\n", query)
 
-	log.Printf("executing query: %s\n", fullQuery)
-
-	_, err := db.Exec(fmt.Sprintf(query, tableName, columnName, value))
-
+	_, err := db.Exec(query)
 	if err != nil {
 		log.Fatalf("error setting value '%s' to column '%s': '%s'", value, columnName, err)
 	}
 }
 
-func addColumn(tableName string, columnName string, db *sql.DB) {
-	query := "ALTER TABLE '%v' ADD '%v' TEXT;"
+func addColumn(tableName string, columnName string, columnType string, db *sql.DB) {
+	query := fmt.Sprintf("ALTER TABLE '%s' ADD '%s' %s;", tableName, columnName, columnType)
+	log.Printf("executing query: %s\n", query)
 
-	fullQuery := fmt.Sprintf(query, tableName, columnName)
-
-	log.Printf("executing query: %s\n", fullQuery)
-
-	_, err := db.Exec(fullQuery)
-
+	_, err := db.Exec(query)
 	if err != nil {
 		log.Fatalf("error adding column '%s': '%s'", columnName, err)
+	}
+}
+
+func executeQuery(query string, db *sql.DB) {
+	query = fmt.Sprintf("%s;", query)
+	log.Printf("executing query: %s\n", query)
+
+	_, err := db.Exec(query)
+	if err != nil {
+		log.Fatalf("error executing query: '%s'", err)
+	}
+}
+
+func analyze(db *sql.DB) {
+	_, err := db.Exec("ANALYZE")
+	if err != nil {
+		log.Fatalf("error running analyze: %s", err)
 	}
 }
