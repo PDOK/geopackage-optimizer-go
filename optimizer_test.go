@@ -23,6 +23,7 @@ func TestOptimizeOWSGeopackage(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
+
 	optimizeOWSGeopackage(sourceGeopackage)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
@@ -71,7 +72,9 @@ func TestOptimizeOAFGeopackageNoConfig(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
-	optimizeOAFGeopackage(sourceGeopackage, "")
+
+	config := ""
+	optimizeOAFGeopackage(sourceGeopackage, config)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
@@ -123,7 +126,19 @@ func TestOptimizeOAFGeopackageExternalFid(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
-	optimizeOAFGeopackage(sourceGeopackage, "{\"layers\": {\"pand\": {\"external-fid-columns\": [\"identificatie\"]}}}")
+	config := `{
+	    "layers":
+		{
+			"pand":
+			{
+				"external-fid-columns":
+				[
+					"identificatie"
+				]
+			}
+		}
+	}`
+	optimizeOAFGeopackage(sourceGeopackage, config)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
@@ -161,7 +176,22 @@ func TestOptimizeOAFGeopackageSQLStatements(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
-	optimizeOAFGeopackage(sourceGeopackage, "{\"layers\": {\"pand\": {\"sql-statements\": [\"ALTER TABLE pand ADD COLUMN fid_copy integer\",\"UPDATE pand SET fid_copy = fid\",\"CREATE INDEX pand_identificatie_idx ON pand(identificatie)\"]}}}")
+
+	config := `{
+		"layers":
+		{
+			"pand":
+			{
+				"sql-statements":
+				[
+					"ALTER TABLE pand ADD COLUMN fid_copy integer",
+					"UPDATE pand SET fid_copy = fid",
+					"CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
+				]
+			}
+		}
+	}`
+	optimizeOAFGeopackage(sourceGeopackage, config)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
@@ -216,7 +246,31 @@ func TestOptimizeOAFGeopackageFullConfig(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
-	optimizeOAFGeopackage(sourceGeopackage, "{\"layers\": {\"pand\": {\"fid-column\": \"feature_id\", \"geom-column\": \"geom\", \"sql-statements\": [\"ALTER TABLE pand RENAME COLUMN fid TO feature_id\",\"CREATE INDEX pand_identificatie_idx ON pand(identificatie)\"], \"external-fid-columns\": [\"identificatie\"], \"temporal-columns\": [\"bouwjaar\"]}}}")
+
+	config := `{
+    "layers":
+		{
+			"pand":
+			{
+				"fid-column": "feature_id",
+				"geom-column": "geom",
+				"sql-statements":
+				[
+					"ALTER TABLE pand RENAME COLUMN fid TO feature_id",
+					"CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
+				],
+				"external-fid-columns":
+				[
+					"identificatie"
+				],
+				"temporal-columns":
+				[
+					"bouwjaar"
+				]
+			}
+		}
+	}`
+	optimizeOAFGeopackage(sourceGeopackage, config)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
