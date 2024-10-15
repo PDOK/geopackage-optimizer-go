@@ -11,24 +11,25 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestName(t *testing.T) {
+func TestOptimizeOWSGeopackage(t *testing.T) {
 	sourceGeopackage := "geopackage/geopackage.gpkg"
 	source, err := os.Open("geopackage/original.gpkg")
-
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
 
 	destination, _ := os.Create(sourceGeopackage)
-	io.Copy(destination, source)
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		log.Fatalf("error copying GeoPackage: %s", err)
+	}
 	optimizeOWSGeopackage(sourceGeopackage)
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
-	defer db.Close()
-
 	if err != nil {
-		log.Fatalf("error opening source GeoPackage: %s", err)
+		log.Fatalf("error opening sourceGeoPackage: %s", err)
 	}
+	defer db.Close()
 
 	tableNames := getTableNames(db)
 
