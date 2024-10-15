@@ -19,7 +19,7 @@ RUN git clone https://github.com/benwebber/sqlite3-uuid.git
 WORKDIR /sqlite3-uuid
 RUN make
 
-FROM golang:1.17-alpine AS build-env
+FROM golang:1.22-alpine AS build-env
 
 RUN apk update && apk upgrade && \
    apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite jq libuuid
