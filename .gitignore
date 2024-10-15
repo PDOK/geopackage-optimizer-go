@@ -10,6 +10,9 @@ geopackage-optimizer-go
 # Test binary, built with `go test -c`
 *.test
 
+# Test output
+geopackage/geopackage.gpkg
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
