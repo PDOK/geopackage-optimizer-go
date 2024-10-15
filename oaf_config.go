@@ -5,6 +5,7 @@ type OafConfig struct {
 }
 
 type Layer struct {
+	FidColumn          string     `json:"fid-column" default:"fid"`
 	GeomColumn         string     `json:"geom-column" default:"geom"`
 	SQLStatements      []string   `json:"sql-statements"`
 	ExternalFidColumns []string   `json:"external-fid-columns"`
