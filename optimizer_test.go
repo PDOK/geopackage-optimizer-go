@@ -127,16 +127,16 @@ func TestOptimizeOAFGeopackageExternalFid(t *testing.T) {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
 	config := `{
-	    "layers":
-		{
-			"pand":
-			{
-				"external-fid-columns":
-				[
-					"identificatie"
-				]
-			}
-		}
+	  "layers":
+	  {
+	    "pand":
+	    {
+	      "external-fid-columns":
+	      [
+	        "identificatie"
+	      ]
+	    }
+	  }
 	}`
 	optimizeOAFGeopackage(sourceGeopackage, config)
 
@@ -178,18 +178,18 @@ func TestOptimizeOAFGeopackageSQLStatements(t *testing.T) {
 	}
 
 	config := `{
-		"layers":
-		{
-			"pand":
-			{
-				"sql-statements":
-				[
-					"ALTER TABLE pand ADD COLUMN fid_copy integer",
-					"UPDATE pand SET fid_copy = fid",
-					"CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
-				]
-			}
-		}
+	  "layers":
+	  {
+	    "pand":
+	    {
+	      "sql-statements":
+	      [
+	        "ALTER TABLE pand ADD COLUMN fid_copy integer",
+	        "UPDATE pand SET fid_copy = fid",
+	        "CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
+	      ]
+	    }
+	  }
 	}`
 	optimizeOAFGeopackage(sourceGeopackage, config)
 
@@ -248,27 +248,27 @@ func TestOptimizeOAFGeopackageFullConfig(t *testing.T) {
 	}
 
 	config := `{
-    "layers":
-		{
-			"pand":
-			{
-				"fid-column": "feature_id",
-				"geom-column": "geom",
-				"sql-statements":
-				[
-					"ALTER TABLE pand RENAME COLUMN fid TO feature_id",
-					"CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
-				],
-				"external-fid-columns":
-				[
-					"identificatie"
-				],
-				"temporal-columns":
-				[
-					"bouwjaar"
-				]
-			}
-		}
+      "layers":
+	  {
+	    "pand":
+	    {
+	      "fid-column": "feature_id",
+	      "geom-column": "geom",
+	      "sql-statements":
+	      [
+	        "ALTER TABLE pand RENAME COLUMN fid TO feature_id",
+	        "CREATE INDEX pand_identificatie_idx ON pand(identificatie)"
+	      ],
+	      "external-fid-columns":
+	      [
+	        "identificatie"
+	      ],
+	      "temporal-columns":
+	      [
+	        "bouwjaar"
+	      ]
+	    }
+	  }
 	}`
 	optimizeOAFGeopackage(sourceGeopackage, config)
 
