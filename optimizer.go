@@ -57,6 +57,7 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 			}
 			layerCfg := oafConfig.Layers[tableName]
 
+			// any configured SQL statements are executed first, to allow maximum configuration freedom if needed
 			for _, stmt := range layerCfg.SQLStatements {
 				executeQuery(stmt, db)
 			}
