@@ -19,7 +19,7 @@ RUN git clone https://github.com/benwebber/sqlite3-uuid.git
 WORKDIR /sqlite3-uuid
 RUN make
 
-FROM golang:1.17-alpine AS build-env
+FROM golang:1.23-alpine AS build-env
 
 RUN apk update && apk upgrade && \
    apk add --no-cache bash git pkgconfig gcc g++ libc-dev ca-certificates gdal libspatialite sqlite jq libuuid
@@ -43,7 +43,9 @@ ENV CGO_ENABLED=1
 ENV GOOS=linux
 
 COPY --from=build-ext /sqlite3-uuid/dist/uuid.so.* /usr/lib/uuid.so
-RUN cp /usr/lib/mod_spatialite.so.7 /usr/lib/mod_spatialite.so
+# hack to make the now 'ancient' sqlite3-uuid lib work
+RUN ln -s /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.1.1
+RUN cp /usr/lib/mod_spatialite.so.8 /usr/lib/mod_spatialite.so
 
 # run tests
 RUN go test ./... -covermode=atomic

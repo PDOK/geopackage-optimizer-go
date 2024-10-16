@@ -1,8 +1,9 @@
 module github.com/PDOK/geopackage-optimizer-go
 
-go 1.17
+go 1.23
 
 require (
-	github.com/google/uuid v1.0.0
-	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/creasty/defaults v1.8.0
+	github.com/google/uuid v1.6.0
+	github.com/mattn/go-sqlite3 v1.14.24
 )
