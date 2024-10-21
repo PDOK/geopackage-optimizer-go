@@ -1,5 +1,5 @@
-FROM ubuntu:20.04 as build-ext
-ENV TZ Europe/Amsterdam
+FROM ubuntu:20.04 AS build-ext
+ENV TZ=Europe/Amsterdam
 
 RUN apt-get update && \
     apt-get install -y \
@@ -27,7 +27,7 @@ RUN apk update && apk upgrade && \
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
 
-ENV TZ Europe/Amsterdam
+ENV TZ=Europe/Amsterdam
 
 WORKDIR /go/src/app
 

@@ -5,9 +5,41 @@
 [![Go Report Card](https://goreportcard.com/badge/PDOK/geopackage-optimizer-go)](https://goreportcard.com/report/PDOK/geopackage-optimizer-go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/pdok/geopackage-optimizer-go.svg)](https://hub.docker.com/r/pdok/geopackage-optimizer-go)
 
-Optimizes geopackage so that it can be used as datasource for PDOK ogc services.
+Optimizes geopackage so that it can be used as datasource for (PDOK) OGC services and APIs.
+
+## Build
+
+```
+docker build pdok/geopackage-optimizer-go .
+```
+
+## Run
+
+```
+Usage of /optimizer:
+  -config string
+        optional JSON config for additional optimizations
+  -s string
+        source geopackage (default "empty")
+  -service-type string
+        service type to optimize geopackage for (default "ows")
+```
+
+### TL;DR
+
+Run from the root of this repo (note modifies `geopackage/original.gpkg`):
+
+```bash
+docker run \
+  -v geopackage:/geopackage \
+  pdok/geopackage-optimizer-go:latest "/geopackage/original.gpkg"
+```
 
 ## Optimizations
+
+### OGC webservices
+
+With flag `-service-type ows`:
 
 * create index PUUID using UUID4
 * create index FUUID using [tablename].[PUUID]
@@ -20,72 +52,12 @@ This ensures that there are randomly generated UUID's usable as index, which has
 * having a UUID prevents users from creating applications that assumes that id
   has meaning and will not change in the future
 
-## TLDR Usage
+### OGC API Features
 
-Run from the root of this repo (note modifies `geopackage/original.gpkg`):
+With flag `-service-type oaf`:
 
-```bash
-docker run \
-  -v geopackage:/geopackage \
-  pdok/geopackage-optimizer-go:latest "/geopackage/original.gpkg"
-```
+* create BTree equivalent of an RTree spatial index
+* create index for temporal columns
+* create indexed column with an "external feature id" (external_fid). This external FID is a UUID v5 based on one or more given columns that are functionally unique across time.
 
-## Workflow examples
-
-```yaml
-spec:
-  templates:
-    - name: optimize-gpkg
-      retryStrategy:
-        limit: 2
-        retryPolicy: "Always"
-        backoff:
-          duration: "10"
-          factor: 3
-      volumes:
-        - name: gpkg-volume
-          emptyDir: {}
-        - name: optimize-gpkg
-          configMap:
-            name: optimize-gpkg
-            defaultMode: 0777
-      inputs:
-        parameters:
-          - name: source-key
-          - name: destination-key
-        artifacts:
-          - name: "gpkg"
-            path: "/data/input.gpkg"
-            archive:
-              none: {}
-      outputs:
-        artifacts:
-          - name: gpkg
-            path: "/data/input.gpkg"
-            archive:
-              none: {}
-            azure:
-              endpoint: "$(BLOBS_ENDPOINT)"
-              container: geopackages
-              blob: "{{inputs.parameters.destination-key}}"
-              accountKeySecret:
-                name: blobs-argo
-                key: BLOBS_KEY
-      container:
-        image: geopackage-optimizer-go
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-          - name: gpkg-volume
-            mountPath: /data
-        command: ["/optimizer", "-s"] # Needed with argo 3.4.4 Emissary workflow executor
-        args: ["/data/input.gpkg"]
-        resources:
-          limits:
-            cpu: "0.1"
-            memory: "650Mi"
-            ephemeral-storage: # PATCH
-          requests:
-            cpu: "0.1"
-            memory: "650Mi"
-            ephemeral-storage: # PATCH
-```
+Above optimizations primarily target OGC API Features served through [GoKoala](https://github.com/PDOK/gokoala).
