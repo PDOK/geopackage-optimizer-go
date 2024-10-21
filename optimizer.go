@@ -65,6 +65,7 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 			if layerCfg.ExternalFidColumns != nil {
 				addColumn(tableName, "external_fid", "TEXT", db)
 				setColumnValue(tableName, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, tableName, strings.Join(layerCfg.ExternalFidColumns, "||")), db)
+				createIndex(tableName, []string{"external_fid"}, fmt.Sprintf("%s_external_fid_idx", tableName), false, db)
 			}
 
 			if layerCfg.TemporalColumns != nil {
