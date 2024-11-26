@@ -1,11 +1,11 @@
-# geopackage-optimizer-go
+# geopackage-optimizer
 
 ![GitHub license](https://img.shields.io/github/license/PDOK/geopackage-optimizer-go)
 [![GitHub release](https://img.shields.io/github/release/PDOK/geopackage-optimizer-go.svg)](https://github.com/PDOK/geopackage-optimizer-go/releases)
 [![Go Report Card](https://goreportcard.com/badge/PDOK/geopackage-optimizer-go)](https://goreportcard.com/report/PDOK/geopackage-optimizer-go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/pdok/geopackage-optimizer-go.svg)](https://hub.docker.com/r/pdok/geopackage-optimizer-go)
 
-Optimizes geopackage so that it can be used as datasource for (PDOK) OGC services and APIs.
+Optimizes GeoPackage so that it can be used as datasource for (PDOK) OGC services and APIs.
 
 ## Build
 
@@ -61,3 +61,12 @@ With flag `-service-type oaf`:
 * create indexed column with an "external feature id" (external_fid). This external FID is a UUID v5 based on one or more given columns that are functionally unique across time.
 
 Above optimizations primarily target OGC API Features served through [GoKoala](https://github.com/PDOK/gokoala).
+
+Example:
+
+```bash
+docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
+    /geopackage/original.gpkg 
+    -service-type oaf 
+    -config '{"layers":{"mytable":{"external-fid-columns":["fid"]}}}'
+```
