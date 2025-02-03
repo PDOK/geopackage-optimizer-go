@@ -1,12 +1,12 @@
 package main
 
 type OwsConfig struct {
-	Indices []ManualIndex
+	Indices []ManualIndex `json:"indices"`
 }
 
 type ManualIndex struct {
-	Name    string
-	Table   string
-	Unique  bool
-	Columns []string
+	Name    string   `json:"name"`
+	Table   string   `json:"table"`
+	Unique  bool     `json:"unique"`
+	Columns []string `json:"columns"`
 }

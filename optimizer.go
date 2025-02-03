@@ -125,6 +125,10 @@ func optimizeOWSGeopackage(sourceGeopackage string, config string) {
 
 	if config != "" {
 		var owsConfig OwsConfig
+		err := json.Unmarshal([]byte(config), &owsConfig)
+		if err != nil {
+			log.Fatalf("cannot unmarshal ows config: %s", err)
+		}
 		if len(owsConfig.Indices) > 0 {
 			foundNames := make(map[string]bool)
 			for _, index := range owsConfig.Indices {
