@@ -24,7 +24,7 @@ func TestOptimizeOWSGeopackage(t *testing.T) {
 		log.Fatalf("error copying GeoPackage: %s", err)
 	}
 
-	optimizeOWSGeopackage(sourceGeopackage)
+	optimizeOWSGeopackage(sourceGeopackage, "")
 
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {

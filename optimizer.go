@@ -25,7 +25,7 @@ func main() {
 
 	switch *serviceType {
 	case "ows":
-		optimizeOWSGeopackage(*sourceGeopackage)
+		optimizeOWSGeopackage(*sourceGeopackage, *config)
 	case "oaf":
 		optimizeOAFGeopackage(*sourceGeopackage, *config)
 	default:
@@ -102,7 +102,7 @@ func addOAFDefaultOptimizations(tableName string, fidColumn string, geomColumn s
 	createIndex(tableName, spatialColumns, fmt.Sprintf("%s_spatial_idx", tableName), false, db)
 }
 
-func optimizeOWSGeopackage(sourceGeopackage string) {
+func optimizeOWSGeopackage(sourceGeopackage string, config string) {
 	log.Printf("Performing OWS optimizations for geopackage: '%s'...\n", sourceGeopackage)
 	db := openDb(sourceGeopackage)
 	defer db.Close()
@@ -121,5 +121,22 @@ func optimizeOWSGeopackage(sourceGeopackage string) {
 		addColumn(tableName, columnName, "TEXT", db)
 		setColumnValue(tableName, columnName, value, db)
 		createIndex(tableName, []string{columnName}, "", true, db)
+	}
+
+	if config != "" {
+		var owsConfig OwsConfig
+		if len(owsConfig.Indices) > 0 {
+			foundNames := make(map[string]bool)
+			for _, index := range owsConfig.Indices {
+				if foundNames[index.Name] {
+					log.Fatalf("Index name '%s' was found more than once", index.Name)
+				}
+				foundNames[index.Name] = true
+			}
+
+			for _, index := range owsConfig.Indices {
+				createIndex(index.Table, index.Columns, index.Name, index.Unique, db)
+			}
+		}
 	}
 }
