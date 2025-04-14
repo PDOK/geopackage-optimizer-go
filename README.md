@@ -43,6 +43,7 @@ With flag `-service-type ows`:
 
 * create index PUUID using UUID4
 * create index FUUID using [tablename].[PUUID]
+* can add (unique) indices on specified columns
 
 This ensures that there are randomly generated UUID's usable as index, which has
  a couple of advantages:
@@ -51,6 +52,13 @@ This ensures that there are randomly generated UUID's usable as index, which has
 * having a UUID instead of an incremental ID prevents crawling
 * having a UUID prevents users from creating applications that assumes that id
   has meaning and will not change in the future
+
+```bash
+docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
+    /geopackage/original.gpkg 
+    -service-type ows 
+    -config '{"indices":[{"name": "my_index", "table": "mytable", "unique": false, "columns": ["mycolumn1", "mycolumn2"]}]}'
+```
 
 ### OGC API Features
 
