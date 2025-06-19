@@ -234,6 +234,74 @@ func TestOptimizeOAFGeopackageSQLStatements(t *testing.T) {
 	}
 }
 
+func TestOptimizeOAFGeopackageRelations(t *testing.T) {
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
+	if err != nil {
+		log.Fatalf("error opening source GeoPackage: %s", err)
+	}
+
+	destination, _ := os.Create(sourceGeopackage)
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		log.Fatalf("error copying GeoPackage: %s", err)
+	}
+
+	config := `{
+	  "layers":
+	  {
+	    "pand":
+	    {
+	      "external-fid-columns":
+	      [
+	        "identificatie"
+	      ]
+	    },
+	    "other":
+	    {
+	      "external-fid-columns":
+	      [
+	        "fid"
+	      ],
+          "relations": 
+          [
+			{
+				"table": "pand",
+	            "columns": {
+	              "fk": "fk",
+	              "pk": "identificatie"
+	            }
+            }
+          ]
+	    }
+	  }
+	}`
+	optimizeOAFGeopackage(sourceGeopackage, config)
+
+	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
+	if err != nil {
+		log.Fatalf("error opening sourceGeoPackage: %s", err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select pand_external_fid from 'other';")
+	if err != nil {
+		log.Fatalf("error executing query: %s", err)
+	}
+
+	for rows.Next() {
+		var otherExternalFid string
+		err = rows.Scan(&otherExternalFid)
+		if err != nil {
+			log.Fatalf("error scanning row: %s", err)
+		}
+		_, err := uuid.Parse(otherExternalFid)
+		if err != nil {
+			log.Fatalf("'pand_external_fid' is invalid because: '%s'", err)
+		}
+	}
+}
+
 func TestOptimizeOAFGeopackageFullConfig(t *testing.T) {
 	sourceGeopackage := "testdata/geopackage.gpkg"
 	source, err := os.Open("testdata/original_oaf.gpkg")
