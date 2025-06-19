@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/mattn/go-sqlite3"
@@ -24,11 +26,10 @@ func openDb(sourceGeopackage string) *sql.DB {
 	registerDriver(
 		"sqlite3_with_extensions",
 		[]string{
-			"mod_spatialite",
-			"uuid",
+			path.Join(os.Getenv("SPATIALITE_LIBRARY_PATH"), "mod_spatialite"),
+			path.Join(os.Getenv("UUID_LIBRARY_PATH"), "uuid"),
 		},
 	)
-
 	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)

@@ -51,17 +51,17 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 			log.Fatalf("failed to set default config: %s", err)
 		}
 		for _, tableName := range tableNames {
-			if _, ok := oafConfig.Layers[tableName]; !ok {
-				log.Printf("WARNING: no config found for gpkg table '%s'", tableName)
+			layerCfg, ok := oafConfig.getLayer(tableName)
+			if !ok {
 				continue
 			}
-			layerCfg := oafConfig.Layers[tableName]
 
 			// any configured SQL statements are executed first, to allow maximum configuration freedom if needed
 			for _, stmt := range layerCfg.SQLStatements {
 				executeQuery(stmt, db)
 			}
 
+			// add external_fid column, then set it to uuid5 based on concatenation of collection name and content of given columns, and create an index on it
 			if layerCfg.ExternalFidColumns != nil {
 				addColumn(tableName, "external_fid", "TEXT", db)
 				setColumnValue(tableName, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, tableName, strings.Join(layerCfg.ExternalFidColumns, "||")), db)
@@ -73,16 +73,16 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 			}
 
 			addOAFDefaultOptimizations(tableName, layerCfg.FidColumn, layerCfg.GeomColumn, layerCfg.TemporalColumns, db)
-
-			analyze(db)
 		}
+		addRelations(tableNames, oafConfig, db)
 	} else {
 		for _, tableName := range tableNames {
 			addOAFDefaultOptimizations(tableName, "fid", "geom", nil, db)
-
-			analyze(db)
 		}
 	}
+
+	// finally, optimize db by gathering statistics
+	analyze(db)
 }
 
 func addOAFDefaultOptimizations(tableName string, fidColumn string, geomColumn string, temporalColumns []string, db *sql.DB) {
@@ -100,6 +100,25 @@ func addOAFDefaultOptimizations(tableName string, fidColumn string, geomColumn s
 		spatialColumns = append(spatialColumns, temporalColumns...)
 	}
 	createIndex(tableName, spatialColumns, fmt.Sprintf("%s_spatial_idx", tableName), false, db)
+}
+
+func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
+	for _, tableName := range tableNames {
+		layerCfg, ok := oafConfig.getLayer(tableName)
+		if !ok {
+			continue
+		}
+
+		// now that every table contains an external_fid, add relations when specified.
+		if layerCfg.ExternalFidColumns != nil && layerCfg.Relations != nil && len(layerCfg.Relations) > 0 {
+			for _, relation := range layerCfg.Relations {
+				log.Printf("Adding relation: %s -> %s.external_fid", relation.ColumnName(), relation.Table)
+				addColumn(tableName, relation.ColumnName(), "TEXT", db)
+				executeQuery(fmt.Sprintf("update %s set %s = (select t.external_fid from %s t where %s = t.%s)",
+					tableName, relation.ColumnName(), relation.Table, relation.Columns.ForeignKey, relation.Columns.PrimaryKey), db)
+			}
+		}
+	}
 }
 
 func optimizeOWSGeopackage(sourceGeopackage string, config string) {
