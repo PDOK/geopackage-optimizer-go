@@ -27,12 +27,12 @@ Usage of /optimizer:
 
 ### TL;DR
 
-Run from the root of this repo (note modifies `geopackage/original.gpkg`):
+Run from the root of this repo (note modifies `testdata/original.gpkg`):
 
 ```bash
 docker run \
   -v geopackage:/geopackage \
-  pdok/geopackage-optimizer-go:latest "/geopackage/original.gpkg"
+  pdok/geopackage-optimizer-go:latest "/testdata/original.gpkg"
 ```
 
 ## Optimizations
@@ -55,7 +55,7 @@ This ensures that there are randomly generated UUID's usable as index, which has
 
 ```bash
 docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
-    /geopackage/original.gpkg 
+    /testdata/original.gpkg 
     -service-type ows 
     -config '{"indices":[{"name": "my_index", "table": "mytable", "unique": false, "columns": ["mycolumn1", "mycolumn2"]}]}'
 ```
@@ -74,7 +74,7 @@ Example:
 
 ```bash
 docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
-    /geopackage/original.gpkg 
+    /testdata/original.gpkg 
     -service-type oaf 
     -config '{"layers":{"mytable":{"external-fid-columns":["fid"]}}}'
 ```

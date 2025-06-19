@@ -11,7 +11,7 @@ geopackage-optimizer-go
 *.test
 
 # Test output
-geopackage/geopackage.gpkg
+testdata/geopackage.gpkg
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

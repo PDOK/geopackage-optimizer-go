@@ -49,7 +49,7 @@ RUN cp /usr/lib/mod_spatialite.so.8 /usr/lib/mod_spatialite.so
 
 # run tests
 RUN go test ./... -covermode=atomic
-RUN rm -r geopackage/
+RUN rm -r testdata/
 
 RUN go build -v -ldflags='-s -w -linkmode auto' -a -installsuffix cgo -o /optimizer .
 
