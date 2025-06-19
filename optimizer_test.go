@@ -12,8 +12,8 @@ import (
 )
 
 func TestOptimizeOWSGeopackage(t *testing.T) {
-	sourceGeopackage := "geopackage/geopackage.gpkg"
-	source, err := os.Open("geopackage/original_ows.gpkg")
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_ows.gpkg")
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
@@ -61,8 +61,8 @@ func TestOptimizeOWSGeopackage(t *testing.T) {
 }
 
 func TestOptimizeOAFGeopackageNoConfig(t *testing.T) {
-	sourceGeopackage := "geopackage/geopackage.gpkg"
-	source, err := os.Open("geopackage/original_oaf.gpkg")
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
@@ -115,8 +115,8 @@ func TestOptimizeOAFGeopackageNoConfig(t *testing.T) {
 }
 
 func TestOptimizeOAFGeopackageExternalFid(t *testing.T) {
-	sourceGeopackage := "geopackage/geopackage.gpkg"
-	source, err := os.Open("geopackage/original_oaf.gpkg")
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
@@ -165,8 +165,8 @@ func TestOptimizeOAFGeopackageExternalFid(t *testing.T) {
 }
 
 func TestOptimizeOAFGeopackageSQLStatements(t *testing.T) {
-	sourceGeopackage := "geopackage/geopackage.gpkg"
-	source, err := os.Open("geopackage/original_oaf.gpkg")
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}
@@ -235,8 +235,8 @@ func TestOptimizeOAFGeopackageSQLStatements(t *testing.T) {
 }
 
 func TestOptimizeOAFGeopackageFullConfig(t *testing.T) {
-	sourceGeopackage := "geopackage/geopackage.gpkg"
-	source, err := os.Open("geopackage/original_oaf.gpkg")
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
 	if err != nil {
 		log.Fatalf("error opening source GeoPackage: %s", err)
 	}

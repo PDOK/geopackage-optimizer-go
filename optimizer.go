@@ -110,7 +110,7 @@ func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
 		}
 
 		// now that every table contains an external_fid, add relations when specified.
-		if layerCfg.ExternalFidColumns != nil && layerCfg.Relations != nil && len(layerCfg.Relations) > 0 {
+		if layerCfg.ExternalFidColumns != nil && layerCfg.Relations != nil {
 			for _, relation := range layerCfg.Relations {
 				log.Printf("Adding relation: %s -> %s.external_fid", relation.ColumnName(), relation.Table)
 				addColumn(tableName, relation.ColumnName(), "TEXT", db)
