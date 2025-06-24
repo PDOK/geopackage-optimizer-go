@@ -114,8 +114,20 @@ func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
 			for _, relation := range layerCfg.Relations {
 				log.Printf("Adding relation: %s -> %s.external_fid", relation.ColumnName(), relation.Table)
 				addColumn(tableName, relation.ColumnName(), "TEXT", db)
-				executeQuery(fmt.Sprintf("update %s set %s = (select t.external_fid from %s t where %s = t.%s)",
-					tableName, relation.ColumnName(), relation.Table, relation.Columns.ForeignKey, relation.Columns.PrimaryKey), db)
+
+				if len(relation.Columns.Keys) < 1 {
+					log.Fatalf("relation '%s' must have at least one pk/fk defined", relation.ColumnName())
+				}
+				// build and execute SQL query to fill the newly added column with external feature ID of the referenced table
+				whereClause := ""
+				for i, key := range relation.Columns.Keys {
+					if i > 0 {
+						whereClause += " and "
+					}
+					whereClause += fmt.Sprintf("%s = t.%s", key.ForeignKey, key.PrimaryKey)
+				}
+				executeQuery(fmt.Sprintf("update %s set %s = (select t.external_fid from %s t where %s)",
+					tableName, relation.ColumnName(), relation.Table, whereClause), db)
 			}
 		}
 	}

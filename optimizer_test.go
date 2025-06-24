@@ -267,9 +267,14 @@ func TestOptimizeOAFGeopackageRelations(t *testing.T) {
           [
 			{
 				"table": "pand",
-	            "columns": {
-	              "fk": "fk",
-	              "pk": "identificatie"
+	            "columns": 
+                {
+                  "keys": [
+					{
+	                  "fk": "fk",
+	                  "pk": "identificatie"
+					}
+				  ]
 	            }
             }
           ]
@@ -284,7 +289,7 @@ func TestOptimizeOAFGeopackageRelations(t *testing.T) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select pand_external_fid from 'other';")
+	rows, err := db.Query("select pand_external_fid from other;")
 	if err != nil {
 		log.Fatalf("error executing query: %s", err)
 	}
@@ -295,9 +300,94 @@ func TestOptimizeOAFGeopackageRelations(t *testing.T) {
 		if err != nil {
 			log.Fatalf("error scanning row: %s", err)
 		}
-		_, err := uuid.Parse(otherExternalFid)
+		actual, err := uuid.Parse(otherExternalFid)
 		if err != nil {
 			log.Fatalf("'pand_external_fid' is invalid because: '%s'", err)
+		}
+		expected := "a64649db-70c5-518f-a842-26ce86113d52"
+		if actual.String() != expected {
+			log.Fatalf("expected fk: '%s', got '%s'", expected, actual)
+		}
+	}
+}
+
+func TestOptimizeOAFGeopackageRelationsWithCompositeKey(t *testing.T) {
+	sourceGeopackage := "testdata/geopackage.gpkg"
+	source, err := os.Open("testdata/original_oaf.gpkg")
+	if err != nil {
+		log.Fatalf("error opening source GeoPackage: %s", err)
+	}
+
+	destination, _ := os.Create(sourceGeopackage)
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		log.Fatalf("error copying GeoPackage: %s", err)
+	}
+
+	config := `{
+	  "layers":
+	  {
+	    "pand":
+	    {
+	      "external-fid-columns":
+	      [
+	        "identificatie"
+	      ]
+	    },
+	    "other_composite":
+	    {
+	      "external-fid-columns":
+	      [
+	        "fid"
+	      ],
+          "relations": 
+          [
+			{
+				"table": "pand",
+	            "columns": 
+                {
+                  "keys": [
+					{
+	                  "fk": "bouwjaar",
+	                  "pk": "bouwjaar"
+					},
+					{
+	                  "fk": "status",
+	                  "pk": "status"
+					}
+				  ]
+	            }
+            }
+          ]
+	    }
+	  }
+	}`
+	optimizeOAFGeopackage(sourceGeopackage, config)
+
+	db, err := sql.Open("sqlite3_with_extensions", sourceGeopackage)
+	if err != nil {
+		log.Fatalf("error opening sourceGeoPackage: %s", err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select pand_external_fid from other_composite;")
+	if err != nil {
+		log.Fatalf("error executing query: %s", err)
+	}
+
+	for rows.Next() {
+		var otherExternalFid string
+		err = rows.Scan(&otherExternalFid)
+		if err != nil {
+			log.Fatalf("error scanning row: %s", err)
+		}
+		actual, err := uuid.Parse(otherExternalFid)
+		if err != nil {
+			log.Fatalf("'pand_external_fid' is invalid because: '%s'", err)
+		}
+		expected := "adff2862-7f22-5688-9b47-e5a9563429a3"
+		if actual.String() != expected {
+			log.Fatalf("expected fk: '%s', got '%s'", expected, actual)
 		}
 	}
 }

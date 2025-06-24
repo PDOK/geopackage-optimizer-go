@@ -29,9 +29,8 @@ type Relation struct {
 }
 
 type RelationColumns struct {
-	ForeignKey string `json:"fk"`
-	PrimaryKey string `json:"pk"`
-	Prefix     string `json:"prefix"`
+	Keys   []RelationKey `json:"keys"`
+	Prefix string        `json:"prefix"`
 }
 
 func (r *Relation) ColumnName() string {
@@ -41,4 +40,9 @@ func (r *Relation) ColumnName() string {
 	}
 	result += "_external_fid"
 	return result
+}
+
+type RelationKey struct {
+	ForeignKey string `json:"fk"`
+	PrimaryKey string `json:"pk"`
 }
