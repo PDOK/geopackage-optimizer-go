@@ -78,3 +78,6 @@ docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go
     -service-type oaf 
     -config '{"layers":{"mytable":{"external-fid-columns":["fid"]}}}'
 ```
+
+Optionally, one can add relations between features using this tool. 
+This is in support of [OAF Part 5 Feature References](https://docs.ogc.org/DRAFTS/23-058r1.html#rc_profile-references).
