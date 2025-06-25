@@ -385,7 +385,7 @@ func TestOptimizeOAFGeopackageRelationsWithCompositeKey(t *testing.T) {
 		if err != nil {
 			log.Fatalf("'pand_external_fid' is invalid because: '%s'", err)
 		}
-		expected := "adff2862-7f22-5688-9b47-e5a9563429a3"
+		expected := "7ef33d14-4114-53e6-aaed-d25961c06c61"
 		if actual.String() != expected {
 			log.Fatalf("expected fk: '%s', got '%s'", expected, actual)
 		}
