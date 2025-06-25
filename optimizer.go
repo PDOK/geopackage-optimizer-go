@@ -124,7 +124,7 @@ func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
 					if i > 0 {
 						whereClause += " and "
 					}
-					whereClause += fmt.Sprintf("%s = t.%s", key.ForeignKey, key.PrimaryKey)
+					whereClause += fmt.Sprintf("%s.%s = t.%s", tableName, key.ForeignKey, key.PrimaryKey)
 				}
 				executeQuery(fmt.Sprintf("update %s set %s = (select t.external_fid from %s t where %s)",
 					tableName, relation.ColumnName(), relation.Table, whereClause), db)

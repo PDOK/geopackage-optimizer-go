@@ -31,7 +31,7 @@ Run from the root of this repo (note modifies `testdata/original.gpkg`):
 
 ```bash
 docker run \
-  -v geopackage:/geopackage \
+  -v testdata:/testdata \
   pdok/geopackage-optimizer-go:latest "/testdata/original.gpkg"
 ```
 
@@ -54,7 +54,7 @@ This ensures that there are randomly generated UUID's usable as index, which has
   has meaning and will not change in the future
 
 ```bash
-docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
+docker run -v `pwd`/testdata:/testdata pdok/geopackage-optimizer-go 
     /testdata/original.gpkg 
     -service-type ows 
     -config '{"indices":[{"name": "my_index", "table": "mytable", "unique": false, "columns": ["mycolumn1", "mycolumn2"]}]}'
@@ -73,11 +73,24 @@ Above optimizations primarily target OGC API Features served through [GoKoala](h
 Example:
 
 ```bash
-docker run -v `pwd`/geopackage:/geopackage pdok/geopackage-optimizer-go 
+docker run -v `pwd`/testdata:/testdata pdok/geopackage-optimizer-go 
     /testdata/original.gpkg 
     -service-type oaf 
     -config '{"layers":{"mytable":{"external-fid-columns":["fid"]}}}'
 ```
 
+
+#### Relations
+
 Optionally, one can add relations between features using this tool. 
 This is in support of [OAF Part 5 Feature References](https://docs.ogc.org/DRAFTS/23-058r1.html#rc_profile-references).
+
+Relations are only supported when `external-fid-columns` are defined. Use
+a config like:
+
+```
+docker run -v `pwd`/testdata:/testdata pdok/geopackage-optimizer-go 
+    /testdata/somepkg.gpkg 
+    -service-type oaf 
+    -config '{"layers":{"table1":{"external-fid-columns":["foo","bar"]},"table2":{"external-fid-columns":["foo","bar","bazz"],"relations":[{"table":"table1","columns":{"keys":[{"fk":"foo","pk":"foo"},{"fk":"bar","pk":"bar"}]}}]}}}'
+```
