@@ -1,0 +1,22 @@
+---
+name: test
+on:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build a local test image, the image includes running unit tests (with native dependencies)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+
+      - name: Build test image
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true  # expose to Docker
+          tags: pdok/geopackage-optimizer-go:local

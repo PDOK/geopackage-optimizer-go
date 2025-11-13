@@ -32,10 +32,10 @@ func TestOptimizeOWSGeopackage(t *testing.T) {
 	}
 	defer db.Close()
 
-	tableNames := getTableNames(db)
+	tables := readTables(db)
 
-	for _, tableName := range tableNames {
-		query := fmt.Sprintf("select puuid, fuuid from '%v'", tableName)
+	for _, table := range tables {
+		query := fmt.Sprintf("select puuid, fuuid from '%v'", table.Name)
 
 		rows, err := db.Query(query)
 		if err != nil {
@@ -53,7 +53,7 @@ func TestOptimizeOWSGeopackage(t *testing.T) {
 			if err != nil {
 				log.Fatalf("Generated uuid is invalid because: '%s'", err)
 			}
-			if fuuid != fmt.Sprintf("%s.%s", tableName, puuid) {
+			if fuuid != fmt.Sprintf("%s.%s", table.Name, puuid) {
 				log.Fatalf("Generated fuuid is invalid because it doesnt match pattern 'tableName.puuid': '%s'", fuuid)
 			}
 		}

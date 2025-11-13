@@ -38,7 +38,7 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 	db := openDb(sourceGeopackage)
 	defer db.Close()
 
-	tableNames := getTableNames(db)
+	tables := readTables(db)
 
 	if config != "" {
 		var oafConfig OafConfig
@@ -50,8 +50,8 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 		if err != nil {
 			log.Fatalf("failed to set default config: %s", err)
 		}
-		for _, tableName := range tableNames {
-			layerCfg, ok := oafConfig.getLayer(tableName)
+		for _, table := range tables {
+			layerCfg, ok := oafConfig.getLayer(table.Name)
 			if !ok {
 				continue
 			}
@@ -63,21 +63,21 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 
 			// add external_fid column, then set it to uuid5 based on concatenation of collection name and content of given columns, and create an index on it
 			if layerCfg.ExternalFidColumns != nil {
-				addColumn(tableName, "external_fid", "TEXT", db)
-				setColumnValue(tableName, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, tableName, strings.Join(layerCfg.ExternalFidColumns, "||")), db)
-				createIndex(tableName, []string{"external_fid"}, fmt.Sprintf("%s_external_fid_idx", tableName), false, db)
+				addColumn(table.Name, "external_fid", "TEXT", db)
+				setColumnValue(table.Name, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, table.Name, strings.Join(layerCfg.ExternalFidColumns, "||")), db)
+				createIndex(table.Name, []string{"external_fid"}, fmt.Sprintf("%s_external_fid_idx", table.Name), false, db)
 			}
 
 			if layerCfg.TemporalColumns != nil {
-				createIndex(tableName, layerCfg.TemporalColumns, fmt.Sprintf("%s_temporal_idx", tableName), false, db)
+				createIndex(table.Name, layerCfg.TemporalColumns, fmt.Sprintf("%s_temporal_idx", table.Name), false, db)
 			}
 
-			addOAFDefaultOptimizations(tableName, layerCfg.FidColumn, layerCfg.GeomColumn, layerCfg.TemporalColumns, db)
+			addOAFDefaultOptimizations(table, layerCfg.FidColumn, layerCfg.GeomColumn, layerCfg.TemporalColumns, db)
 		}
-		addRelations(tableNames, oafConfig, db)
+		addRelations(tables, oafConfig, db)
 	} else {
-		for _, tableName := range tableNames {
-			addOAFDefaultOptimizations(tableName, "fid", "geom", nil, db)
+		for _, table := range tables {
+			addOAFDefaultOptimizations(table, "fid", "geom", nil, db)
 		}
 	}
 
@@ -85,26 +85,30 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 	analyze(db)
 }
 
-func addOAFDefaultOptimizations(tableName string, fidColumn string, geomColumn string, temporalColumns []string, db *sql.DB) {
-	addColumn(tableName, "minx", "numeric", db)
-	addColumn(tableName, "maxx", "numeric", db)
-	addColumn(tableName, "miny", "numeric", db)
-	addColumn(tableName, "maxy", "numeric", db)
-	setColumnValue(tableName, "minx", fmt.Sprintf("ST_MinX(%s)", geomColumn), db)
-	setColumnValue(tableName, "maxx", fmt.Sprintf("ST_MaxX(%s)", geomColumn), db)
-	setColumnValue(tableName, "miny", fmt.Sprintf("ST_MinY(%s)", geomColumn), db)
-	setColumnValue(tableName, "maxy", fmt.Sprintf("ST_MaxY(%s)", geomColumn), db)
+func addOAFDefaultOptimizations(table Table, fidColumn string, geomColumn string, temporalColumns []string, db *sql.DB) {
+	if !table.IsFeatures {
+		log.Printf("Skipping spatial optimizations for table '%s' because it is not of type 'features'", table.Name)
+		return
+	}
+	addColumn(table.Name, "minx", "numeric", db)
+	addColumn(table.Name, "maxx", "numeric", db)
+	addColumn(table.Name, "miny", "numeric", db)
+	addColumn(table.Name, "maxy", "numeric", db)
+	setColumnValue(table.Name, "minx", fmt.Sprintf("ST_MinX(%s)", geomColumn), db)
+	setColumnValue(table.Name, "maxx", fmt.Sprintf("ST_MaxX(%s)", geomColumn), db)
+	setColumnValue(table.Name, "miny", fmt.Sprintf("ST_MinY(%s)", geomColumn), db)
+	setColumnValue(table.Name, "maxy", fmt.Sprintf("ST_MaxY(%s)", geomColumn), db)
 
 	spatialColumns := []string{fidColumn, "minx", "maxx", "miny", "maxy"}
 	if temporalColumns != nil {
 		spatialColumns = append(spatialColumns, temporalColumns...)
 	}
-	createIndex(tableName, spatialColumns, fmt.Sprintf("%s_spatial_idx", tableName), false, db)
+	createIndex(table.Name, spatialColumns, fmt.Sprintf("%s_spatial_idx", table.Name), false, db)
 }
 
-func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
-	for _, tableName := range tableNames {
-		layerCfg, ok := oafConfig.getLayer(tableName)
+func addRelations(tables []Table, oafConfig OafConfig, db *sql.DB) {
+	for _, table := range tables {
+		layerCfg, ok := oafConfig.getLayer(table.Name)
 		if !ok {
 			continue
 		}
@@ -113,7 +117,7 @@ func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
 		if layerCfg.ExternalFidColumns != nil && layerCfg.Relations != nil {
 			for _, relation := range layerCfg.Relations {
 				log.Printf("Adding relation: %s -> %s.external_fid", relation.ColumnName(), relation.Table)
-				addColumn(tableName, relation.ColumnName(), "TEXT", db)
+				addColumn(table.Name, relation.ColumnName(), "TEXT", db)
 
 				if len(relation.Columns.Keys) < 1 {
 					log.Fatalf("relation '%s' must have at least one pk/fk defined", relation.ColumnName())
@@ -124,10 +128,10 @@ func addRelations(tableNames []string, oafConfig OafConfig, db *sql.DB) {
 					if i > 0 {
 						whereClause += " and "
 					}
-					whereClause += fmt.Sprintf("%s.%s = t.%s", tableName, key.ForeignKey, key.PrimaryKey)
+					whereClause += fmt.Sprintf("%s.%s = t.%s", table.Name, key.ForeignKey, key.PrimaryKey)
 				}
 				executeQuery(fmt.Sprintf("update %s set %s = (select t.external_fid from %s t where %s)",
-					tableName, relation.ColumnName(), relation.Table, whereClause), db)
+					table.Name, relation.ColumnName(), relation.Table, whereClause), db)
 			}
 		}
 	}
@@ -138,20 +142,20 @@ func optimizeOWSGeopackage(sourceGeopackage string, config string) {
 	db := openDb(sourceGeopackage)
 	defer db.Close()
 
-	tableNames := getTableNames(db)
+	tables := readTables(db)
 
-	for _, tableName := range tableNames {
+	for _, table := range tables {
 		columnName := "puuid"
 		value := "uuid4()"
-		addColumn(tableName, columnName, "TEXT", db)
-		setColumnValue(tableName, columnName, value, db)
-		createIndex(tableName, []string{columnName}, "", true, db)
+		addColumn(table.Name, columnName, "TEXT", db)
+		setColumnValue(table.Name, columnName, value, db)
+		createIndex(table.Name, []string{columnName}, "", true, db)
 
 		columnName = "fuuid"
-		value = fmt.Sprintf("'%s.' || puuid", tableName)
-		addColumn(tableName, columnName, "TEXT", db)
-		setColumnValue(tableName, columnName, value, db)
-		createIndex(tableName, []string{columnName}, "", true, db)
+		value = fmt.Sprintf("'%s.' || puuid", table.Name)
+		addColumn(table.Name, columnName, "TEXT", db)
+		setColumnValue(table.Name, columnName, value, db)
+		createIndex(table.Name, []string{columnName}, "", true, db)
 	}
 
 	if config != "" {
