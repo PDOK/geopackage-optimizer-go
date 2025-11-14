@@ -15,7 +15,7 @@ RUN apt-get update && \
 
 # build uuid extension
 RUN apt-get install -y git
-RUN git clone https://github.com/benwebber/sqlite3-uuid.git
+RUN git clone https://github.com/PDOK/sqlite3-uuid.git
 WORKDIR /sqlite3-uuid
 RUN make
 
