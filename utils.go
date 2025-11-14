@@ -38,24 +38,30 @@ func openDb(sourceGeopackage string) *sql.DB {
 	return db
 }
 
-func getTableNames(db *sql.DB) []string {
-	rows, err := db.Query("select table_name from gpkg_contents")
+type Table struct {
+	Name       string
+	IsFeatures bool
+}
+
+func readTables(db *sql.DB) []Table {
+	rows, err := db.Query("select table_name, data_type from gpkg_contents")
 	if err != nil {
 		log.Fatalf("error selecting gpkg_contents: %s", err)
 	}
 
-	var tableNames []string
-
+	var result []Table
 	for rows.Next() {
-		var table_name string
-		err = rows.Scan(&table_name)
+		var tableName, dataType string
+		err = rows.Scan(&tableName, &dataType)
 		if err != nil {
 			log.Fatal(err)
 		}
-		tableNames = append(tableNames, table_name)
+		result = append(result, Table{
+			Name:       tableName,
+			IsFeatures: dataType == "features",
+		})
 	}
-
-	return tableNames
+	return result
 }
 
 func createIndex(tableName string, columnNames []string, indexName string, unique bool, db *sql.DB) {
