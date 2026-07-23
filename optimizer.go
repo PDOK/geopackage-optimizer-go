@@ -64,7 +64,11 @@ func optimizeOAFGeopackage(sourceGeopackage string, config string) {
 			// add external_fid column, then set it to uuid5 based on concatenation of collection name and content of given columns, and create an index on it
 			if layerCfg.ExternalFidColumns != nil {
 				addColumn(table.Name, "external_fid", "TEXT", db)
-				setColumnValue(table.Name, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, table.Name, strings.Join(layerCfg.ExternalFidColumns, "||")), db)
+				var externalFidColumns []string
+				for _, column := range layerCfg.ExternalFidColumns {
+					externalFidColumns = append(externalFidColumns, fmt.Sprintf("coalesce(%s,'')", column))
+				}
+				setColumnValue(table.Name, "external_fid", fmt.Sprintf("uuid5('%s', '%s'||%s)", pdokNamespace, table.Name, strings.Join(externalFidColumns, "||")), db)
 				createIndex(table.Name, []string{"external_fid"}, fmt.Sprintf("%s_external_fid_idx", table.Name), false, db)
 			}
 
